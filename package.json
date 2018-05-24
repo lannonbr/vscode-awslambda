@@ -1,0 +1,44 @@
+{
+  "name": "vscode-awslambda",
+  "displayName": "AWS Lambda Extension",
+  "description": "Unofficial AWS Lambda Extension for VS Code",
+  "version": "0.0.1",
+  "publisher": "lannonbr",
+  "engines": {
+    "vscode": "^1.23.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/lannonbr/vscode-awslambda"
+  },
+  "license": "MIT",
+  "categories": ["Other"],
+  "activationEvents": ["onView:lambda"],
+  "main": "./out/extension",
+  "contributes": {
+    "views": {
+      "explorer": [
+        {
+          "id": "lambda",
+          "name": "AWS Lambda"
+        }
+      ]
+    }
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run compile",
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./",
+    "postinstall": "node ./node_modules/vscode/bin/install",
+    "test": "npm run compile && node ./node_modules/vscode/bin/test"
+  },
+  "devDependencies": {
+    "typescript": "^2.6.1",
+    "vscode": "^1.1.6",
+    "@types/node": "^7.0.43",
+    "@types/mocha": "^2.2.42"
+  },
+  "dependencies": {
+    "aws-sdk": "^2.245.1"
+  }
+}
