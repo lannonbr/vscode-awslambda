@@ -8,21 +8,37 @@ config.credentials = new SharedIniFileCredentials({
 config.update({ region: "us-east-1" });
 
 export class LambdaTreeProvider implements vscode.TreeDataProvider<LambdaFunc> {
-  onDidChangeTreeData?: vscode.Event<LambdaFunc | null | undefined> | undefined;
-
   getTreeItem(element: LambdaFunc): vscode.TreeItem {
     return element;
   }
 
   getChildren(element?: LambdaFunc): Thenable<LambdaFunc[]> {
-    return this.getFunctions();
+    if (element) {
+      return this.returnFunctionData(element);
+    } else {
+      return this.getFunctions();
+    }
+  }
+
+  private returnFunctionData(element: LambdaFunc): Thenable<LambdaFunc[]> {
+    return new Promise((resolve, reject) => {
+      if (element.funcObj != null) {
+        const arn = new LambdaFunc(
+          `ARN: ${element.funcObj.FunctionArn}`,
+          vscode.TreeItemCollapsibleState.None
+        );
+        const runtime = new LambdaFunc(
+          `Runtime: ${element.funcObj.Runtime}`,
+          vscode.TreeItemCollapsibleState.None
+        );
+        resolve([arn, runtime]);
+      } else {
+        reject("funcObj is null");
+      }
+    });
   }
 
   private getFunctions(): Thenable<LambdaFunc[]> {
-    const toFunc = (funcName: string): LambdaFunc => {
-      return new LambdaFunc(funcName, vscode.TreeItemCollapsibleState.None);
-    };
-
     var lambda = new Lambda();
 
     return new Promise((resolve, reject) => {
@@ -30,10 +46,16 @@ export class LambdaTreeProvider implements vscode.TreeDataProvider<LambdaFunc> {
         if (err) reject(err);
         else {
           if (data.Functions) {
-            let funcs = data.Functions.map(
-              func => func.FunctionName
-            ) as string[];
-            resolve(funcs.map(toFunc));
+            console.log(data.Functions);
+            resolve(
+              data.Functions.map(func => {
+                return new LambdaFunc(
+                  func.FunctionName as string,
+                  vscode.TreeItemCollapsibleState.Collapsed,
+                  func
+                );
+              })
+            );
           }
         }
       });
@@ -44,7 +66,8 @@ export class LambdaTreeProvider implements vscode.TreeDataProvider<LambdaFunc> {
 class LambdaFunc extends vscode.TreeItem {
   constructor(
     public readonly label: string,
-    public readonly collapsibleState: vscode.TreeItemCollapsibleState
+    public readonly collapsibleState: vscode.TreeItemCollapsibleState,
+    public readonly funcObj?: Lambda.FunctionConfiguration
   ) {
     super(label, collapsibleState);
   }
